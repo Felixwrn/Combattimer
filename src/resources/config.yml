@@ -1,0 +1,15 @@
+combat-time: 10
+
+blocked-commands:
+  - spawn
+  - home
+  - tpa
+
+messages:
+  combat-start: "&cDu bist jetzt im Kampf!"
+  combat-end: "&aDu bist nicht mehr im Kampf!"
+  no-command: "&cDu kannst diesen Befehl im Kampf nicht benutzen!"
+
+actionbar:
+  enabled: true
+  text: "&cIm Kampf: {time}s"
