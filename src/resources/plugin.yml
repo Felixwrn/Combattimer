@@ -1,4 +1,4 @@
 name: CombatTag
 version: 1.0
-main: 
-api-version: 1.20
+main: de.combattimer.combat.Main
+api-version: 1.21
