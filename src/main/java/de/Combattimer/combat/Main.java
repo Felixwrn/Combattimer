@@ -1,10 +1,12 @@
 package de.Combattimer.combat;
 
+import net.md_5.bungee.api.ChatMessageType;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Listener;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -14,13 +16,17 @@ import java.util.UUID;
 
 public class Main extends JavaPlugin implements Listener {
 
-    private HashMap<UUID, Long> combatTimer = new HashMap<>();
+    private final HashMap<UUID, Long> combatTimer = new HashMap<>();
 
     @Override
     public void onEnable() {
+        // Config laden oder erstellen
         saveDefaultConfig();
+
+        // Listener registrieren
         Bukkit.getPluginManager().registerEvents(this, this);
 
+        // Scheduler für Actionbar-Timer
         Bukkit.getScheduler().runTaskTimer(this, () -> {
             for (UUID uuid : combatTimer.keySet()) {
                 Player player = Bukkit.getPlayer(uuid);
@@ -35,29 +41,33 @@ public class Main extends JavaPlugin implements Listener {
                 }
 
                 if (getConfig().getBoolean("actionbar.enabled")) {
-                    String msg = getConfig().getString("actionbar.text").replace("{time}", String.valueOf(timeLeft));
-                    player.sendActionBar(color(msg));
+                    String msg = getConfig().getString("actionbar.text")
+                            .replace("{time}", String.valueOf(timeLeft));
+                    player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(color(msg)));
                 }
             }
-        }, 0L, 20L);
+        }, 0L, 20L); // 20 ticks = 1 Sekunde
     }
 
+    // Spieler in den Kampf setzen
     @EventHandler
     public void onFight(EntityDamageByEntityEvent event) {
         if (event.getEntity() instanceof Player && event.getDamager() instanceof Player) {
             Player victim = (Player) event.getEntity();
             Player attacker = (Player) event.getDamager();
 
-            long time = System.currentTimeMillis() + (getConfig().getInt("combat-time") * 1000);
+            long endTime = System.currentTimeMillis() + (getConfig().getInt("combat-time") * 1000);
 
-            combatTimer.put(victim.getUniqueId(), time);
-            combatTimer.put(attacker.getUniqueId(), time);
+            combatTimer.put(victim.getUniqueId(), endTime);
+            combatTimer.put(attacker.getUniqueId(), endTime);
 
-            victim.sendMessage(color(getConfig().getString("messages.combat-start")));
-            attacker.sendMessage(color(getConfig().getString("messages.combat-start")));
+            String startMsg = color(getConfig().getString("messages.combat-start"));
+            victim.sendMessage(startMsg);
+            attacker.sendMessage(startMsg);
         }
     }
 
+    // Blockiert Commands im Kampf
     @EventHandler
     public void onCommand(PlayerCommandPreprocessEvent event) {
         Player player = event.getPlayer();
@@ -71,10 +81,11 @@ public class Main extends JavaPlugin implements Listener {
         }
     }
 
+    // Prüfen ob Spieler im Kampf ist
     private boolean isInCombat(Player player) {
         if (!combatTimer.containsKey(player.getUniqueId())) return false;
-        long end = combatTimer.get(player.getUniqueId());
 
+        long end = combatTimer.get(player.getUniqueId());
         if (System.currentTimeMillis() > end) {
             combatTimer.remove(player.getUniqueId());
             return false;
@@ -83,6 +94,7 @@ public class Main extends JavaPlugin implements Listener {
         return true;
     }
 
+    // Farbcode-Helper
     private String color(String msg) {
         return ChatColor.translateAlternateColorCodes('&', msg);
     }
