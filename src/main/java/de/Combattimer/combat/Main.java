@@ -12,6 +12,8 @@ import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.UUID;
 
 public class Main extends JavaPlugin implements Listener {
@@ -28,14 +30,17 @@ public class Main extends JavaPlugin implements Listener {
 
         // Scheduler für Actionbar-Timer
         Bukkit.getScheduler().runTaskTimer(this, () -> {
-            for (UUID uuid : combatTimer.keySet()) {
+            Iterator<Map.Entry<UUID, Long>> entries = combatTimer.entrySet().iterator();
+            while (entries.hasNext()) {
+                Map.Entry<UUID, Long> entry = entries.next();
+                UUID uuid = entry.getKey();
                 Player player = Bukkit.getPlayer(uuid);
                 if (player == null) continue;
 
-                long timeLeft = (combatTimer.get(uuid) - System.currentTimeMillis()) / 1000;
+                long timeLeft = (entry.getValue() - System.currentTimeMillis()) / 1000;
 
                 if (timeLeft <= 0) {
-                    combatTimer.remove(uuid);
+                    entries.remove();
                     player.sendMessage(color(getConfig().getString("messages.combat-end")));
                     continue;
                 }
