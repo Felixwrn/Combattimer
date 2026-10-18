@@ -1,0 +1,4 @@
+name: Combattimer
+version: 1.0
+main: de.Combattimer.combat.Main
+api-version: '26.3'
