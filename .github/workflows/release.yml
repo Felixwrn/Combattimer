@@ -1,0 +1,29 @@
+name: Publish Minecraft release
+
+on:
+  push:
+    tags: ['mc26.3*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+      - name: Build and verify plugin
+        run: mvn -B -ntp clean verify
+      - name: Publish verified JAR and checksum
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          cd target
+          test -f Combattimer-1.0.jar
+          sha256sum Combattimer-1.0.jar > SHA256SUMS
+          gh release create "$RELEASE_TAG" --verify-tag --latest --title 'Combattimer – Minecraft 26.3' --notes-file ../.github/release-notes-mc26.3.md Combattimer-1.0.jar SHA256SUMS
